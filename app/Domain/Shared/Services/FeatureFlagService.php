@@ -72,25 +72,19 @@ class FeatureFlagService
     public static function getAllForTenant(int $tenantId, ?int $planId = null): array
     {
         return Cache::remember("feature_flags:tenant:{$tenantId}", self::CACHE_TTL, function () use ($tenantId) {
-            $tenant = \App\Domain\Tenant\Models\Tenant::find($tenantId);
-            if (! $tenant?->firm_id) return [];
+            // Single-company: features resolve from the tenant's own active
+            // subscription → Plan.features, then per-tenant/global FeatureFlag
+            // overrides layered on top. (The muhasebi firm-tier path was
+            // removed — kaabosh has no firms.)
+            $subscription = \App\Domain\Subscription\Models\Subscription::query()
+                ->where('tenant_id', $tenantId)
+                ->active()
+                ->with('plan:id,slug,features')
+                ->first();
 
-            $firm = \App\Domain\Firm\Models\Firm::find($tenant->firm_id);
-
-            // Source of truth = firm's active Subscription → Plan.features.
-            // Falls back to the deprecated firms.subscription_tier column
-            // only for firms that haven't been backfilled.
-            $subscription = \App\Domain\Subscription\Models\Subscription::activeForFirm($tenant->firm_id);
+            $planId       = $subscription?->plan?->id;
             $planFeatures = $subscription?->plan?->features;
-
-            if (! is_array($planFeatures)) {
-                $tier = $firm?->subscription_tier
-                    instanceof \App\Domain\Shared\Enums\FirmSubscriptionTier
-                    ? $firm->subscription_tier
-                    : null;
-                if (! $tier) return [];
-                $planFeatures = $tier->features();
-            }
+            $planFeatures = is_array($planFeatures) ? $planFeatures : [];
 
             // Layer 1 — plan manifest. Catalog features default to their
             // plan-membership value (true if listed, false otherwise).
@@ -102,21 +96,18 @@ class FeatureFlagService
                 $result[$key] = array_key_exists($key, $enabledKeys);
             }
 
-            // Layer 2 — SuperAdmin firm-level overrides. Flag rows that opine
-            // for this firm force the resolved value regardless of tier.
-            FeatureFlag::query()
-                ->where(function ($q): void {
-                    $q->whereNotNull('enabled_for_firms')
-                      ->orWhereNotNull('disabled_for_firms');
-                })
-                ->get()
-                ->each(function (FeatureFlag $flag) use ($firm, &$result): void {
-                    if (! array_key_exists($flag->key, $result)) return;
-                    $override = $flag->firmOverride($firm->id);
-                    if ($override !== null) {
-                        $result[$flag->key] = $override;
+            // Layer 2 — per-tenant + global FeatureFlag overrides. A flag
+            // overlays only when it carries an explicit opinion (global,
+            // per-tenant, or per-plan), so the plan bundle stays
+            // authoritative by default. Non-catalog flags that opine are
+            // still surfaced so the SPA can gate on them.
+            FeatureFlag::query()->get()->each(
+                function (FeatureFlag $flag) use ($tenantId, $planId, &$result): void {
+                    if ($flag->hasOpinionFor($tenantId, $planId)) {
+                        $result[$flag->key] = $flag->isEnabledFor($tenantId, $planId);
                     }
-                });
+                },
+            );
 
             return $result;
         });
