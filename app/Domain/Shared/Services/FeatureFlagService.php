@@ -87,9 +87,21 @@ class FeatureFlagService
             $planFeatures = is_array($planFeatures) ? $planFeatures : [];
 
             // Layer 1 — plan manifest. Catalog features default to their
-            // plan-membership value (true if listed, false otherwise).
-            $catalog     = array_keys((array) config('features.catalog', []));
-            $enabledKeys = array_flip($planFeatures);
+            // plan-membership value (true if bundled, false otherwise).
+            // Plan.features is canonically a {slug => bool} map (PlanSeeder
+            // / Plan factory), but tolerate a legacy [slug, ...] list too.
+            $catalog = array_keys((array) config('features.catalog', []));
+
+            $enabledKeys = [];
+            foreach ($planFeatures as $k => $v) {
+                if (is_string($k)) {
+                    if ($v) {
+                        $enabledKeys[$k] = true; // map shape {slug: bool}
+                    }
+                } elseif (is_string($v)) {
+                    $enabledKeys[$v] = true;     // list shape [slug, ...]
+                }
+            }
 
             $result = [];
             foreach ($catalog as $key) {
