@@ -62,14 +62,14 @@ class UsageWarningService
     {
         $usage = $this->usageService->getUsage($subscription->tenant_id);
 
+        // kaabosh-erp metered resources only — the accounting metrics
+        // (invoices/bills/journal_entries/bank_imports) were dropped with
+        // the product split. `?? []` keeps the sweep resilient if a metric
+        // is ever absent (treated as an uncapped/zero-limit no-op).
         $metrics = [
-            'users' => $usage['users'],
-            'clients' => $usage['clients'],
-            'invoices' => $usage['invoices'],
-            'bills' => $usage['bills'],
-            'journal_entries' => $usage['journal_entries'],
-            'bank_imports' => $usage['bank_imports'],
-            'documents' => $usage['documents'],
+            'users' => $usage['users'] ?? [],
+            'clients' => $usage['clients'] ?? [],
+            'documents' => $usage['documents'] ?? [],
             'storage' => [
                 'percent' => $usage['storage']['percent'] ?? 0,
                 'exceeded' => $usage['storage']['exceeded'] ?? false,

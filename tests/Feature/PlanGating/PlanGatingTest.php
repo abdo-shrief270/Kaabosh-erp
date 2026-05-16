@@ -50,12 +50,12 @@ it('allows access to a feature included in the plan', function (): void {
 
 it('blocks access when plan does not include the feature', function (): void {
     $tenant = createTenant();
-    subscribeTenantToPlan($tenant, 'starter'); // starter lacks e_invoice
+    subscribeTenantToPlan($tenant, 'starter'); // starter lacks 'payroll'
     $admin = createAdminUser($tenant);
     actingAsUser($admin);
 
     $response = $this->withHeader('X-Tenant', $tenant->slug)
-        ->getJson('/api/v1/eta/documents');
+        ->getJson('/api/v1/payroll');
 
     $response->assertStatus(403)
         ->assertJsonPath('error', 'feature_not_available');
@@ -71,7 +71,7 @@ it('blocks access when tenant has no subscription', function (): void {
     actingAsUser($admin);
 
     $response = $this->withHeader('X-Tenant', $tenant->slug)
-        ->getJson('/api/v1/eta/documents');
+        ->getJson('/api/v1/payroll');
 
     $response->assertStatus(403)
         ->assertJsonPath('error', 'subscription_inactive');
@@ -79,13 +79,13 @@ it('blocks access when tenant has no subscription', function (): void {
 
 it('allows access when a global FeatureFlag overrides the plan', function (): void {
     $tenant = createTenant();
-    subscribeTenantToPlan($tenant, 'starter'); // starter lacks e_invoice
+    subscribeTenantToPlan($tenant, 'starter'); // starter lacks 'payroll'
     $admin = createAdminUser($tenant);
     actingAsUser($admin);
 
     FeatureFlag::create([
-        'key' => 'e_invoice',
-        'name' => 'ETA E-Invoice',
+        'key' => 'payroll',
+        'name' => 'Payroll',
         'is_enabled_globally' => true,
         'rollout_percentage' => 100,
     ]);
@@ -93,7 +93,7 @@ it('allows access when a global FeatureFlag overrides the plan', function (): vo
     Cache::flush(); // invalidate FeatureFlagService cache
 
     $response = $this->withHeader('X-Tenant', $tenant->slug)
-        ->getJson('/api/v1/eta/documents');
+        ->getJson('/api/v1/payroll');
 
     // With flag enabled, must NOT be blocked by feature middleware.
     expect($response->json('error'))->not->toBe('feature_not_available');

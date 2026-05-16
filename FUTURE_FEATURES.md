@@ -28,11 +28,18 @@ These are Filament-panel carryover (coupons/trial-extension are muhasebi
 billing concepts). **Decision:** which admin-panel resources does
 kaabosh keep? Triage the Filament panel separately from the API.
 
-## 3. Subscription / plan-gating (4 — `PlanGating`, `UsageWarningServiceTest`)
+## 3. Subscription / plan-gating — ✅ DONE (PR #4, 2026-05-16)
 
-Plan-feature gating + usage-threshold warnings assume the muhasebi
-plan/subscription seed + firm-scoped subscriptions. Needs the kaabosh
-plan catalogue + subscription model defined before these pass.
+Plan-feature gating + usage-threshold warnings assumed the muhasebi
+plan/subscription seed + firm-scoped subscriptions.
+
+Resolved: `UsageService::getUsage()` rebuilt against kaabosh metered
+resources (active users / clients / documents / storage bytes / API
+calls) vs. the active plan's `limits` map — the muhasebi accounting
+metrics were dropped. `UsageWarningService` trimmed to the kaabosh
+metric set. `PlanGatingTest` realigned off the deleted muhasebi
+`e_invoice`/ETA route onto the real kaabosh `feature:payroll` gate
+(`/api/v1/payroll`; `starter` lacks `payroll`, `professional` has it).
 
 ## 4. Admin revenue reporting (2 — `AdminDashboardTest`)
 
@@ -40,11 +47,12 @@ plan catalogue + subscription model defined before these pass.
 were accounting-derived. A kaabosh revenue source (subscription MRR)
 must be defined; not a route-wiring fix.
 
-## 5. Tenant-suspension semantics (1 — `MiddlewareTest`)
+## 5. Tenant-suspension semantics — ✅ DONE (PR #4, 2026-05-16)
 
-`IdentifyTenant` no longer 404s a suspended tenant. In single-company
-kaabosh, "tenant suspension" semantics differ from muhasebi — confirm
-the intended behaviour, then enforce in the middleware.
+`IdentifyTenant` is already correct single-company (404 when the user's
+company is unresolvable, 403 when suspended). The `MiddlewareTest` 404
+case still asserted the muhasebi X-Tenant-header behaviour; rewritten to
+express single-company semantics (user with no resolvable company → 404).
 
 ## 6. RBAC role-presets authorization (1 — `RbacPresetsTest`)
 
