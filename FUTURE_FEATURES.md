@@ -41,11 +41,15 @@ metric set. `PlanGatingTest` realigned off the deleted muhasebi
 `e_invoice`/ETA route onto the real kaabosh `feature:payroll` gate
 (`/api/v1/payroll`; `starter` lacks `payroll`, `professional` has it).
 
-## 4. Admin revenue reporting (2 — `AdminDashboardTest`)
+## 4. Admin revenue reporting — ✅ DONE (PR #6, 2026-05-16)
 
-`/api/v1/admin/revenue/monthly` & `/by-plan` 404 — revenue analytics
-were accounting-derived. A kaabosh revenue source (subscription MRR)
-must be defined; not a route-wiring fix.
+The original triage assumed revenue analytics were accounting-derived
+and needed a new MRR source. They weren't: `AdminDashboardService`
+already computes MRR/ARR/`getMonthlyRevenue`/`getRevenueByPlan` from
+`SubscriptionPayment` — the correct kaabosh subscription-MRR source —
+and `AdminDashboardController::monthlyRevenue`/`revenueByPlan` already
+exist. It was fork-lost route wiring after all: `admin/revenue/monthly`
+and `admin/revenue/by-plan` were simply never registered. Routes added.
 
 ## 5. Tenant-suspension semantics — ✅ DONE (PR #4, 2026-05-16)
 
