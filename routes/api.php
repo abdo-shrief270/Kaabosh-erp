@@ -32,7 +32,6 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DeviceTokenController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\EngagementController;
-use App\Http\Controllers\Api\V1\ExecutiveDashboardController;
 use App\Http\Controllers\Api\V1\Firm\FirmAddOnsController;
 use App\Http\Controllers\Api\V1\Firm\FirmAssignmentsController;
 use App\Http\Controllers\Api\V1\Firm\FirmBillingController;
@@ -45,8 +44,6 @@ use App\Http\Controllers\Api\V1\LeaveController;
 use App\Http\Controllers\Api\V1\LoanController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
-use App\Http\Controllers\Api\V1\OnboardingController;
-use App\Http\Controllers\Api\V1\OnboardingWizardController;
 use App\Http\Controllers\Api\V1\PayrollController;
 use App\Http\Controllers\Api\V1\PayslipController;
 use App\Http\Controllers\Api\V1\PlanController;
@@ -252,8 +249,6 @@ Route::prefix('v1')->group(function (): void {
             Route::middleware('permission:view_dashboard')->group(function (): void {
                 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
             });
-            Route::get('executive-dashboard', [ExecutiveDashboardController::class, 'index'])
-                ->name('executive-dashboard.index');
 
             // Activity log
             Route::prefix('activity-log')->name('activity-log.')->group(function (): void {
@@ -383,14 +378,6 @@ Route::prefix('v1')->group(function (): void {
                 Route::post('approvals/{approval}/submit', [ApprovalWorkflowController::class, 'submit'])->whereNumber('approval')->name('approvals.submit');
                 Route::post('approvals/{approval}/approve', [ApprovalWorkflowController::class, 'approve'])->whereNumber('approval')->name('approvals.approve');
                 Route::post('approvals/{approval}/reject', [ApprovalWorkflowController::class, 'reject'])->whereNumber('approval')->name('approvals.reject');
-            });
-
-            // ── Onboarding ──
-            Route::prefix('onboarding')->name('onboarding.')->group(function (): void {
-                Route::get('/', [OnboardingController::class, 'index'])->name('index');
-                Route::post('complete/{step}', [OnboardingController::class, 'completeStep'])->name('complete-step');
-                Route::get('wizard', [OnboardingWizardController::class, 'show'])->name('wizard.show');
-                Route::post('wizard', [OnboardingWizardController::class, 'save'])->name('wizard.save');
             });
 
             // ── Company branding ──
