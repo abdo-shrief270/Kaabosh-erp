@@ -307,8 +307,9 @@ Route::prefix('v1')->group(function (): void {
 
             // Clients (slim — external parties referenced by engagements + time billing)
             Route::middleware('permission:manage_clients')->group(function (): void {
-                Route::apiResource('clients', ClientController::class);
+                Route::post('clients/{client}/restore', [ClientController::class, 'restore'])->whereNumber('client')->name('clients.restore');
                 Route::patch('clients/{client}/toggle-active', [ClientController::class, 'toggleActive'])->name('clients.toggle-active');
+                Route::apiResource('clients', ClientController::class);
             });
 
             // Currencies (reference data; payroll/expenses need it)
@@ -319,17 +320,35 @@ Route::prefix('v1')->group(function (): void {
 
             // Documents (HR contracts, payslips, engagement docs, etc.)
             Route::middleware('permission:manage_documents')->group(function (): void {
+                // Static + nested routes before apiResource so {document}
+                // doesn't swallow "bulk"/"quota".
+                Route::post('documents/bulk', [DocumentController::class, 'bulkStore'])->name('documents.bulk');
+                Route::get('documents/quota', [DocumentController::class, 'quota'])->name('documents.quota');
+                Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+                Route::post('documents/{document}/archive', [DocumentController::class, 'archive'])->name('documents.archive');
+                Route::post('documents/{document}/unarchive', [DocumentController::class, 'unarchive'])->name('documents.unarchive');
                 Route::apiResource('documents', DocumentController::class);
             });
 
             // ── Payroll & HR (firm employees) ──
             Route::middleware(['feature:payroll', 'permission:manage_payroll'])->group(function (): void {
-                Route::apiResource('payroll-runs', PayrollController::class);
-                Route::post('payroll-runs/{run}/process', [PayrollController::class, 'process'])->whereNumber('run')->name('payroll-runs.process');
-                Route::post('payroll-runs/{run}/approve', [PayrollController::class, 'approve'])->whereNumber('run')->name('payroll-runs.approve');
-                Route::post('payroll-runs/{run}/pay', [PayrollController::class, 'pay'])->whereNumber('run')->name('payroll-runs.pay');
+                // Payroll runs — explicit routes (controller uses
+                // calculate/approve/markPaid/items, not the apiResource verbs).
+                Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
+                Route::post('payroll', [PayrollController::class, 'store'])->name('payroll.store');
+                Route::get('payroll/{payrollRun}', [PayrollController::class, 'show'])->whereNumber('payrollRun')->name('payroll.show');
+                Route::delete('payroll/{payrollRun}', [PayrollController::class, 'destroy'])->whereNumber('payrollRun')->name('payroll.destroy');
+                Route::get('payroll/{payrollRun}/items', [PayrollController::class, 'items'])->whereNumber('payrollRun')->name('payroll.items');
+                Route::post('payroll/{payrollRun}/calculate', [PayrollController::class, 'calculate'])->whereNumber('payrollRun')->name('payroll.calculate');
+                Route::post('payroll/{payrollRun}/approve', [PayrollController::class, 'approve'])->whereNumber('payrollRun')->name('payroll.approve');
+                Route::post('payroll/{payrollRun}/mark-paid', [PayrollController::class, 'markPaid'])->whereNumber('payrollRun')->name('payroll.mark-paid');
 
-                Route::apiResource('employees', PayrollController::class)->parameters(['employees' => 'employee']);
+                // Employees — controller uses listEmployees/storeEmployee/etc.
+                Route::get('employees', [PayrollController::class, 'listEmployees'])->name('employees.index');
+                Route::post('employees', [PayrollController::class, 'storeEmployee'])->name('employees.store');
+                Route::get('employees/{employee}', [PayrollController::class, 'showEmployee'])->whereNumber('employee')->name('employees.show');
+                Route::put('employees/{employee}', [PayrollController::class, 'updateEmployee'])->whereNumber('employee')->name('employees.update');
+                Route::delete('employees/{employee}', [PayrollController::class, 'destroyEmployee'])->whereNumber('employee')->name('employees.destroy');
                 Route::apiResource('salary-components', SalaryComponentController::class);
                 Route::apiResource('attendance', AttendanceController::class);
                 Route::apiResource('leave-requests', LeaveController::class);
@@ -340,7 +359,16 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('payslips/{payslip}/pdf', [PayslipController::class, 'pdf'])->whereNumber('payslip')->name('payslips.pdf');
 
                 Route::get('social-insurance/rates', [SocialInsuranceController::class, 'rates'])->name('social-insurance.rates');
+                Route::post('social-insurance/calculate', [SocialInsuranceController::class, 'calculate'])->name('social-insurance.calculate');
+                Route::post('social-insurance/register', [SocialInsuranceController::class, 'register'])->name('social-insurance.register');
+                Route::get('social-insurance/monthly-report', [SocialInsuranceController::class, 'monthlyReport'])->name('social-insurance.monthly-report');
+
                 Route::get('labor-law/holidays', [LaborLawController::class, 'holidays'])->name('labor-law.holidays');
+                Route::post('labor-law/overtime', [LaborLawController::class, 'calculateOvertime'])->name('labor-law.overtime');
+                Route::post('labor-law/end-of-service', [LaborLawController::class, 'calculateEndOfService'])->name('labor-law.end-of-service');
+                Route::get('labor-law/leave-entitlement/{employee}', [LaborLawController::class, 'leaveEntitlement'])->whereNumber('employee')->name('labor-law.leave-entitlement');
+                Route::post('labor-law/validate-wage', [LaborLawController::class, 'validateWage'])->name('labor-law.validate-wage');
+                Route::post('labor-law/social-insurance', [LaborLawController::class, 'socialInsurance'])->name('labor-law.social-insurance');
             });
 
             // ── Engagements / Projects ──
@@ -352,21 +380,34 @@ Route::prefix('v1')->group(function (): void {
 
             // ── Time tracking ──
             Route::middleware(['feature:timesheets', 'permission:manage_timesheets'])->group(function (): void {
+                // Static routes before apiResource so {timesheet} doesn't
+                // swallow "summary"/"bulk-*".
+                Route::get('timesheets/summary', [TimesheetController::class, 'summary'])->name('timesheets.summary');
+                Route::post('timesheets/bulk-submit', [TimesheetController::class, 'bulkSubmit'])->name('timesheets.bulk-submit');
+                Route::post('timesheets/bulk-approve', [TimesheetController::class, 'bulkApprove'])->name('timesheets.bulk-approve');
                 Route::apiResource('timesheets', TimesheetController::class);
                 Route::post('timesheets/{timesheet}/submit', [TimesheetController::class, 'submit'])->whereNumber('timesheet')->name('timesheets.submit');
                 Route::post('timesheets/{timesheet}/approve', [TimesheetController::class, 'approve'])->whereNumber('timesheet')->name('timesheets.approve');
                 Route::post('timesheets/{timesheet}/reject', [TimesheetController::class, 'reject'])->whereNumber('timesheet')->name('timesheets.reject');
 
-                Route::get('timer', [TimerController::class, 'show'])->name('timer.show');
-                Route::post('timer/start', [TimerController::class, 'start'])->name('timer.start');
-                Route::post('timer/stop', [TimerController::class, 'stop'])->name('timer.stop');
+                // Timers — controller surface is start/stop/current/discard.
+                Route::get('timers/current', [TimerController::class, 'current'])->name('timers.current');
+                Route::post('timers/start', [TimerController::class, 'start'])->name('timers.start');
+                Route::post('timers/{timer}/stop', [TimerController::class, 'stop'])->whereNumber('timer')->name('timers.stop');
+                Route::delete('timers/{timer}', [TimerController::class, 'discard'])->whereNumber('timer')->name('timers.discard');
 
                 Route::get('time-billing', [TimeBillingController::class, 'index'])->name('time-billing.index');
             });
 
             // ── Team / Employees (alt surface) ──
             Route::middleware('permission:manage_team')->group(function (): void {
-                Route::apiResource('team', TeamController::class);
+                // TeamController surface: index/invite/update/toggleActive/destroy/assignRole.
+                Route::get('team', [TeamController::class, 'index'])->name('team.index');
+                Route::post('team/invite', [TeamController::class, 'invite'])->name('team.invite');
+                Route::put('team/{user}', [TeamController::class, 'update'])->whereNumber('user')->name('team.update');
+                Route::patch('team/{user}/toggle-active', [TeamController::class, 'toggleActive'])->whereNumber('user')->name('team.toggle-active');
+                Route::post('team/{user}/assign-role', [TeamController::class, 'assignRole'])->whereNumber('user')->name('team.assign-role');
+                Route::delete('team/{user}', [TeamController::class, 'destroy'])->whereNumber('user')->name('team.destroy');
             });
 
             // ── Alerts & Approvals (workflow) ──
@@ -390,6 +431,7 @@ Route::prefix('v1')->group(function (): void {
             // ── RBAC (roles + permissions) ──
             Route::middleware('permission:manage_roles')->group(function (): void {
                 Route::get('rbac/roles', [RbacController::class, 'roles'])->name('rbac.roles');
+                Route::get('rbac/role-presets', [RbacController::class, 'rolePresets'])->name('rbac.role-presets');
                 Route::get('rbac/permissions', [RbacController::class, 'permissions'])->name('rbac.permissions');
                 Route::put('rbac/users/{user}/roles', [RbacController::class, 'assignRoles'])->whereNumber('user')->name('rbac.assign-roles');
             });
@@ -711,7 +753,12 @@ Route::prefix('v1')->group(function (): void {
             Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
             Route::apiResource('users', AdminUserController::class);
             Route::apiResource('roles', AdminRoleController::class);
+            Route::post('tenants/{tenant}/suspend', [AdminTenantController::class, 'suspend'])->name('tenants.suspend');
+            Route::post('tenants/{tenant}/activate', [AdminTenantController::class, 'activate'])->name('tenants.activate');
+            Route::post('tenants/{tenant}/cancel', [AdminTenantController::class, 'cancel'])->name('tenants.cancel');
+            Route::post('tenants/{tenant}/impersonate', [AdminTenantController::class, 'impersonate'])->name('tenants.impersonate');
             Route::apiResource('tenants', AdminTenantController::class);
+            Route::apiResource('plans', PlanController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::apiResource('subscriptions', AdminSubscriptionController::class);
             Route::apiResource('feature-flags', AdminFeatureFlagController::class);
             Route::apiResource('email-templates', AdminEmailTemplateController::class);

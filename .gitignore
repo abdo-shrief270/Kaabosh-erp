@@ -27,3 +27,7 @@ Thumbs.db
 .claude/worktrees
 .github/workflows/
 .github/workflows/
+
+# Compiled Blade views (build artifacts)
+storage/framework/views/*.php
+storage/framework/views/*.blade.php

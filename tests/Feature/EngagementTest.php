@@ -29,17 +29,19 @@ beforeEach(function (): void {
 
 describe('EngagementType labels', function (): void {
     it('returns correct labels for all engagement types', function (): void {
-        expect(EngagementType::Audit->label())->toBe('Audit');
-        expect(EngagementType::Review->label())->toBe('Review');
-        expect(EngagementType::Compilation->label())->toBe('Compilation');
-        expect(EngagementType::Tax->label())->toBe('Tax');
-        expect(EngagementType::Bookkeeping->label())->toBe('Bookkeeping');
+        expect(EngagementType::Project->label())->toBe('Project');
+        expect(EngagementType::Retainer->label())->toBe('Retainer');
         expect(EngagementType::Consulting->label())->toBe('Consulting');
+        expect(EngagementType::Campaign->label())->toBe('Campaign');
+        expect(EngagementType::Implementation->label())->toBe('Implementation');
+        expect(EngagementType::Maintenance->label())->toBe('Maintenance');
+        expect(EngagementType::Internal->label())->toBe('Internal');
+        expect(EngagementType::Other->label())->toBe('Other');
     });
 
     it('returns correct Arabic labels', function (): void {
-        expect(EngagementType::Audit->labelAr())->toBe('مراجعة');
-        expect(EngagementType::Tax->labelAr())->toBe('ضرائب');
+        expect(EngagementType::Project->labelAr())->toBe('مشروع');
+        expect(EngagementType::Consulting->labelAr())->toBe('استشارات');
     });
 });
 
@@ -71,7 +73,7 @@ describe('Progress calculation', function (): void {
         $engagement = Engagement::query()->create([
             'tenant_id' => $this->tenant->id,
             'client_id' => $this->client->id,
-            'engagement_type' => EngagementType::Audit,
+            'engagement_type' => EngagementType::Project,
             'name_ar' => 'مهمة اختبار',
             'status' => EngagementStatus::InProgress,
             'created_by' => $this->admin->id,
@@ -120,7 +122,7 @@ describe('Progress calculation', function (): void {
         $engagement = Engagement::query()->create([
             'tenant_id' => $this->tenant->id,
             'client_id' => $this->client->id,
-            'engagement_type' => EngagementType::Review,
+            'engagement_type' => EngagementType::Consulting,
             'name_ar' => 'مهمة فارغة',
         ]);
 
@@ -137,7 +139,7 @@ describe('Deliverable completion tracking', function (): void {
         $engagement = Engagement::query()->create([
             'tenant_id' => $this->tenant->id,
             'client_id' => $this->client->id,
-            'engagement_type' => EngagementType::Audit,
+            'engagement_type' => EngagementType::Project,
             'name_ar' => 'مهمة تسليمات',
         ]);
 
@@ -167,7 +169,7 @@ describe('Working paper review segregation', function (): void {
         $engagement = Engagement::query()->create([
             'tenant_id' => $this->tenant->id,
             'client_id' => $this->client->id,
-            'engagement_type' => EngagementType::Audit,
+            'engagement_type' => EngagementType::Project,
             'name_ar' => 'مهمة فصل المهام',
         ]);
 
@@ -191,7 +193,7 @@ describe('Working paper review segregation', function (): void {
         $engagement = Engagement::query()->create([
             'tenant_id' => $this->tenant->id,
             'client_id' => $this->client->id,
-            'engagement_type' => EngagementType::Audit,
+            'engagement_type' => EngagementType::Project,
             'name_ar' => 'مهمة مراجعة',
         ]);
 
