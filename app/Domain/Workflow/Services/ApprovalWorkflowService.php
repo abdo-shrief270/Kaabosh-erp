@@ -455,9 +455,14 @@ class ApprovalWorkflowService
 
         // Firm-owner matches: workflows with approver_type = firm_owner are
         // owned by every Owner of the firm whose tenant the workflow targets.
-        $isFirmOwner = $user->firm_role
-            && \App\Domain\Shared\Enums\FirmRole::Owner === $user->firm_role;
-        $firmId = $user->firm_id;
+        // kaabosh is single-company — the firm_role/firm_id columns don't
+        // exist on User here, so read raw attributes (null when absent) and
+        // the firm-owner branch is simply skipped.
+        $rawAttrs = $user->getAttributes();
+        $firmRole = $rawAttrs['firm_role'] ?? null;
+        $isFirmOwner = $firmRole
+            && \App\Domain\Shared\Enums\FirmRole::Owner->value === (is_object($firmRole) ? $firmRole->value : $firmRole);
+        $firmId = $rawAttrs['firm_id'] ?? null;
 
         return ApprovalRequest::query()
             ->whereIn('status', [ApprovalStatus::Pending, ApprovalStatus::InProgress])

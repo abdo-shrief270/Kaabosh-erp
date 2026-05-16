@@ -128,13 +128,32 @@ class User extends Authenticatable implements FilamentUser
      *  - Different firm: never (unless SuperAdmin)
      *  - Pre-Model-B users with no firm_id: fall back to home tenant equality
      */
+    /**
+     * Raw firm_id without triggering strict-mode MissingAttributeException.
+     * kaabosh is single-company and has no firm_id column on users — this
+     * returns null there, collapsing all firm-scoped logic to the
+     * single-company path.
+     */
+    private function firmIdRaw(): int|string|null
+    {
+        return $this->getAttributes()['firm_id'] ?? null;
+    }
+
+    private function firmRoleRaw(): ?FirmRole
+    {
+        $raw = $this->getAttributes()['firm_role'] ?? null;
+        if ($raw === null) return null;
+        return $raw instanceof FirmRole ? $raw : FirmRole::tryFrom((string) $raw);
+    }
+
     public function canAccessTenant(\App\Domain\Tenant\Models\Tenant $tenant): bool
     {
         if ($this->isSuperAdmin()) return true;
 
-        if ($this->firm_id && $tenant->firm_id === $this->firm_id) {
+        $firmId = $this->firmIdRaw();
+        if ($firmId && $tenant->firm_id === $firmId) {
             if ($tenant->isFirmBooks()) return true;
-            $role = $this->firm_role;
+            $role = $this->firmRoleRaw();
             if ($role instanceof FirmRole && $role->hasFirmWideAccess()) return true;
             return $this->assignedTenants()->where('tenant_id', $tenant->id)->exists();
         }
@@ -150,9 +169,13 @@ class User extends Authenticatable implements FilamentUser
     public function hasApprovalBypassOn(\App\Domain\Tenant\Models\Tenant $tenant): bool
     {
         if ($this->isSuperAdmin()) return true;
-        if ($this->firm_id !== $tenant->firm_id) return false;
 
-        $role = $this->firm_role;
+        $firmId = $this->firmIdRaw();
+        // No firm context (kaabosh single-company) → no firm-based bypass;
+        // approval gates apply normally.
+        if ($firmId === null || $firmId !== $tenant->firm_id) return false;
+
+        $role = $this->firmRoleRaw();
         if ($role instanceof FirmRole && $role->hasFirmWideAccess()) return true;
 
         return \Illuminate\Support\Facades\DB::table('firm_user_tenant')
