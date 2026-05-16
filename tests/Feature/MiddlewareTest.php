@@ -27,15 +27,17 @@ describe('IdentifyTenant Middleware', function (): void {
             ->assertJsonPath('tenant_id', $tenant->id);
     });
 
-    it('returns 404 for non-existent tenant', function (): void {
-        $user = User::factory()->create();
+    it('returns 404 when the user has no resolvable company', function (): void {
+        // Single-company kaabosh: the tenant is the user's own company, not
+        // an X-Tenant header. "Non-existent" means the account isn't bound
+        // to any company (tenant_id null / dangling) → 404.
+        $user = User::factory()->create(['tenant_id' => null]);
         actingAsUser($user);
 
         Route::middleware(['auth:sanctum', 'tenant'])
             ->get('/api/v1/test-tenant-missing', fn () => response()->json(['ok' => true]));
 
-        $response = $this->withHeader('X-Tenant', 'non-existent')
-            ->getJson('/api/v1/test-tenant-missing');
+        $response = $this->getJson('/api/v1/test-tenant-missing');
 
         $response->assertNotFound();
     });
