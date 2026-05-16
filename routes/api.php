@@ -757,6 +757,11 @@ Route::prefix('v1')->group(function (): void {
         // ──────────────────────────────────
         Route::middleware(['permission:super_admin', 'admin.ip'])->prefix('admin')->name('admin.')->group(function (): void {
             Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+            // Subscription-MRR revenue analytics (fork-lost wiring; the
+            // controller + service methods already exist and derive from
+            // SubscriptionPayment, the kaabosh revenue source).
+            Route::get('revenue/monthly', [AdminDashboardController::class, 'monthlyRevenue'])->name('revenue.monthly');
+            Route::get('revenue/by-plan', [AdminDashboardController::class, 'revenueByPlan'])->name('revenue.by-plan');
             Route::apiResource('users', AdminUserController::class);
             Route::apiResource('roles', AdminRoleController::class);
             Route::post('tenants/{tenant}/suspend', [AdminTenantController::class, 'suspend'])->name('tenants.suspend');
