@@ -113,8 +113,6 @@ class AuthController extends Controller
                 'role' => $user->role->value,
                 'locale' => $user->locale,
                 'tenant_id' => $user->tenant_id,
-                'firm_id'   => $user->firm_id,
-                'firm_role' => $user->firm_role?->value,
                 'timezone' => $user->timezone,
                 'is_active' => $user->is_active,
                 'email_verified_at' => $user->email_verified_at?->toISOString(),

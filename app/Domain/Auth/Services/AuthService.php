@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Auth\Services;
 
-use App\Domain\Firm\Models\Firm;
-use App\Domain\Shared\Enums\FirmRole;
-use App\Domain\Shared\Enums\FirmSubscriptionTier;
 use App\Domain\Shared\Enums\TenantStatus;
-use App\Domain\Shared\Enums\TenantType;
 use App\Domain\Shared\Enums\UserRole;
 use App\Domain\Subscription\Enums\SubscriptionStatus;
 use App\Domain\Subscription\Models\Plan;
@@ -18,7 +14,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -34,22 +29,9 @@ class AuthService
         return DB::transaction(function () use ($data): array {
             $trialEndsAt = now()->addDays(14);
 
-            // Every new registration creates a Firm wrapping a firm-books
-            // tenant. The user becomes that firm's owner. From here they can
-            // add client-tenants from the firm panel.
-            $firm = Firm::query()->create([
-                'name'              => $data['tenant_name'],
-                'slug'              => $this->uniqueFirmSlug($data['tenant_slug']),
-                'email'             => $data['email'] ?? null,
-                'phone'             => $data['phone'] ?? null,
-                'status'            => 'active',
-                'subscription_tier' => FirmSubscriptionTier::Starter->value,
-                'settings'          => [],
-            ]);
-
+            // Single-company-per-account: one registration = one Company
+            // (tenant) + its admin user. No Firm / Model-B wrapper.
             $tenant = Tenant::query()->create([
-                'firm_id' => $firm->id,
-                'type'    => TenantType::FirmBooks->value,
                 'name'    => $data['tenant_name'],
                 'slug'    => $data['tenant_slug'],
                 'status'  => TenantStatus::Trial,
@@ -64,8 +46,6 @@ class AuthService
 
             $user = User::query()->create([
                 'tenant_id' => $tenant->id,
-                'firm_id'   => $firm->id,
-                'firm_role' => FirmRole::Owner->value,
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
@@ -80,52 +60,12 @@ class AuthService
             } catch (\Throwable) { /* role may not exist yet */
             }
 
-            $this->assignFirmFreeTrialSubscription($firm->id, $trialEndsAt);
+            $this->assignFreeTrialSubscription($tenant->id, $trialEndsAt);
 
             $token = $user->createToken('auth-token')->plainTextToken;
 
             return compact('user', 'tenant', 'token');
         });
-    }
-
-    /**
-     * Attach the Firm Free Trial plan to a freshly-created firm. Subscription
-     * row carries firm_id (not tenant_id) — Model B has firm-scoped
-     * subscriptions, not per-tenant. The legacy per-tenant subscription path
-     * is deprecated.
-     */
-    private function assignFirmFreeTrialSubscription(int $firmId, \Illuminate\Support\Carbon $trialEndsAt): void
-    {
-        $plan = Plan::query()->where('slug', 'firm_free_trial')->first();
-
-        if (! $plan) {
-            Log::warning('Firm free-trial plan not found; skipping auto-subscription', ['firm_id' => $firmId]);
-            return;
-        }
-
-        Subscription::query()->create([
-            'firm_id'              => $firmId,
-            'tenant_id'            => null,
-            'plan_id'              => $plan->id,
-            'status'               => SubscriptionStatus::Trial,
-            'billing_cycle'        => 'monthly',
-            'price'                => '0.00',
-            'currency'             => $plan->currency ?? 'EGP',
-            'trial_ends_at'        => $trialEndsAt,
-            'current_period_start' => now()->toDateString(),
-            'current_period_end'   => $trialEndsAt->copy()->toDateString(),
-        ]);
-    }
-
-    private function uniqueFirmSlug(string $base): string
-    {
-        $slug = $base ?: 'firm-'.Str::random(8);
-        $i = 0;
-        while (Firm::query()->where('slug', $slug)->exists()) {
-            $i++;
-            $slug = $base.'-'.$i;
-        }
-        return $slug;
     }
 
     /**
@@ -191,18 +131,9 @@ class AuthService
             ]);
         }
 
-        // Under Model B, only firm staff or client-portal users may log in.
-        // Legacy tenant-users (no firm_id, no portal role) were valid in
-        // Model A but are no longer allowed — invite them as firm staff
-        // or as portal clients explicitly.
-        if (! $user->isSuperAdmin()
-            && ! $user->firm_id
-            && $user->role !== \App\Domain\Shared\Enums\UserRole::Client
-        ) {
-            throw ValidationException::withMessages([
-                'email' => ['This account is not attached to an accounting firm. Contact your firm administrator to be invited.'],
-            ]);
-        }
+        // Single-company-per-account: any active user with an accessible
+        // company may log in. (The muhasebi Model-B firm-attachment gate
+        // was removed — kaabosh has no firms.)
 
         $user->recordLogin();
 
