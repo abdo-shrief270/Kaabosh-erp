@@ -17,7 +17,7 @@ describe('QueueMonitor access control', function (): void {
     it('allows SuperAdmin to view the page', function (): void {
         $this->actingAs($this->superAdmin);
 
-        $this->get('/admin/queue-monitor')->assertOk();
+        $this->get('/queue-monitor')->assertOk();
     });
 
     it('denies access to non-SuperAdmin users', function (): void {
@@ -26,7 +26,7 @@ describe('QueueMonitor access control', function (): void {
 
         $this->actingAs($admin);
 
-        $this->get('/admin/queue-monitor')->assertForbidden();
+        $this->get('/queue-monitor')->assertForbidden();
     });
 
     it('exposes canAccess gate consistently with role', function (): void {

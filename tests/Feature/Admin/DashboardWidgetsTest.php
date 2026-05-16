@@ -183,6 +183,6 @@ describe('TenantStatusDonut', function (): void {
 describe('admin dashboard page', function (): void {
 
     it('loads for a SuperAdmin', function (): void {
-        $this->get('/admin')->assertOk();
+        $this->get('/')->assertOk();
     });
 });
