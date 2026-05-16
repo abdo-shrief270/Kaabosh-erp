@@ -54,11 +54,18 @@ company is unresolvable, 403 when suspended). The `MiddlewareTest` 404
 case still asserted the muhasebi X-Tenant-header behaviour; rewritten to
 express single-company semantics (user with no resolvable company → 404).
 
-## 6. RBAC role-presets authorization (1 — `RbacPresetsTest`)
+## 6. RBAC role-presets authorization — ✅ DONE (PR #5, 2026-05-16)
 
-`GET /rbac/role-presets` now routes but returns 403 — the test's actor
-isn't granted `manage_roles`. Decide whether presets are readable to a
-broader role or fix the test's permission setup.
+`GET /rbac/role-presets` was gated by `permission:manage_roles`, which
+**no role in `config/permissions.php` actually has** — so only
+SuperAdmin could ever reach it.
+
+Decision: the endpoint is read-only metadata feeding the team-
+management "Apply preset" UI, so it belongs to `manage_team` (every
+team admin has it). Split `rbac/role-presets` into its own
+`permission:manage_team` group; the mutating RBAC-admin endpoints
+(`rbac/roles`, `rbac/permissions`, `rbac/users/{user}/roles`) stay
+behind the stricter `manage_roles` gate.
 
 ---
 
