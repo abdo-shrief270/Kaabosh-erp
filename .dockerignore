@@ -1,0 +1,14 @@
+.git
+.github
+.worktrees
+node_modules
+vendor
+tests
+*.md
+.env
+.env.*
+docker-compose*.yml
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*

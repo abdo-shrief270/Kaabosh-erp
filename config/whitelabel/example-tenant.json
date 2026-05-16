@@ -1,0 +1,17 @@
+{
+  "tenant_slug": "example-tenant",
+  "app_name": "Example Accounting",
+  "domain": "accounting.example.com",
+  "theme": {
+    "primary_color": "#2c3e50",
+    "secondary_color": "#3498db"
+  },
+  "features": {
+    "eta_enabled": true,
+    "payroll_enabled": true,
+    "client_portal_enabled": true
+  },
+  "notifications": {
+    "slack_channel": "#example-deploys"
+  }
+}

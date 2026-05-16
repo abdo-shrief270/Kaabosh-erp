@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>muhasebi — Cloud Accounting for the Egyptian Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent: #0d7b74;
+    --accent-dark: #0a5e58;
+    --accent-soft: #e6f3f1;
+    --ink: #1a2433;
+    --ink-soft: #435066;
+    --muted: #6c7a8f;
+    --hair: #e3e8ef;
+    --bg: #ffffff;
+    --callout-bg: #f6f9fb;
+    --callout-border: #cde4e1;
+  }
+
+  @page {
+    size: A4;
+    margin: 18mm 18mm 20mm 18mm;
+    @bottom-center {
+      content: "muhasebi  ·  page " counter(page) " of " counter(pages);
+      font-family: "Inter", sans-serif;
+      font-size: 9pt;
+      color: #6c7a8f;
+    }
+  }
+
+  @page cover {
+    margin: 0;
+    @bottom-center { content: none; }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 11pt;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :lang(ar), [dir="rtl"] {
+    font-family: "Cairo", "Inter", sans-serif;
+  }
+
+  /* Screen presentation — centers content in browser view */
+  body {
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 24mm 20mm;
+    background: #fafbfc;
+  }
+
+  @media print {
+    body {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+    }
+  }
+
+  /* ===== Cover Page ===== */
+  .cover {
+    page: cover;
+    height: 297mm;
+    width: 100%;
+    margin: -24mm -20mm 0 -20mm;
+    padding: 38mm 24mm 30mm 24mm;
+    background:
+      radial-gradient(ellipse at top right, rgba(13,123,116,0.12), transparent 60%),
+      radial-gradient(ellipse at bottom left, rgba(13,123,116,0.08), transparent 55%),
+      linear-gradient(180deg, #ffffff 0%, #f4faf9 100%);
+    border-top: 8px solid var(--accent);
+    page-break-after: always;
+    break-after: page;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media print {
+    .cover {
+      width: 210mm;
+      height: 297mm;
+      margin: 0;
+      padding: 38mm 24mm 30mm 24mm;
+    }
+  }
+
+  .cover::before {
+    content: "";
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(13,123,116,0.18), transparent 70%);
+  }
+
+  .cover-brand {
+    font-family: "Inter", sans-serif;
+    font-size: 14pt;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .cover-title {
+    font-family: "Inter", sans-serif;
+    font-size: 68pt;
+    font-weight: 800;
+    line-height: 1.0;
+    color: var(--ink);
+    margin: 12mm 0 6mm 0;
+    letter-spacing: -0.02em;
+  }
+
+  .cover-title-ar {
+    font-family: "Cairo", sans-serif;
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--accent);
+    direction: rtl;
+    text-align: right;
+    margin-bottom: 4mm;
+  }
+
+  .cover-subtitle {
+    font-size: 16pt;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 140mm;
+    line-height: 1.4;
+  }
+
+  .cover-accent-bar {
+    width: 60mm;
+    height: 4px;
+    background: var(--accent);
+    margin: 8mm 0;
+    border-radius: 2px;
+  }
+
+  .cover-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 10pt;
+    color: var(--muted);
+    border-top: 1px solid var(--hair);
+    padding-top: 6mm;
+  }
+
+  .cover-footer strong {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .cover-visual-note {
+    margin-top: 10mm;
+    padding: 8mm 10mm;
+    background: rgba(255,255,255,0.7);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 10pt;
+    color: var(--ink-soft);
+    max-width: 150mm;
+  }
+
+  .cover-visual-note strong {
+    color: var(--accent);
+    display: block;
+    margin-bottom: 2mm;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 9pt;
+  }
+
+  /* ===== Typography ===== */
+  h1, h2, h3, h4 {
+    font-family: "Inter", sans-serif;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-top: 1.4em;
+    margin-bottom: 0.5em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  h1 { font-size: 26pt; }
+
+  h2 {
+    font-size: 22pt;
+    color: var(--accent);
+    padding-bottom: 0.3em;
+    border-bottom: 3px solid var(--accent);
+    margin-top: 0;
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* first h2 after cover doesn't need another page break because cover already ends the page */
+  h2:first-of-type {
+    /* keep page-break-before — cover has page-break-after so this remains a fresh page */
+  }
+
+  h3 {
+    font-size: 15pt;
+    color: var(--accent-dark);
+    margin-top: 1.8em;
+  }
+
+  h4 {
+    font-size: 12pt;
+    color: var(--ink);
+    margin-top: 1.4em;
+    margin-bottom: 0.3em;
+  }
+
+  p {
+    margin: 0 0 0.8em 0;
+    color: var(--ink-soft);
+  }
+
+  strong { color: var(--ink); font-weight: 600; }
+
+  em { color: var(--ink-soft); font-style: italic; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  code {
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 0.9em;
+  }
+
+  ul, ol {
+    margin: 0.4em 0 1em 0;
+    padding-left: 1.4em;
+    color: var(--ink-soft);
+  }
+
+  ul li, ol li {
+    margin-bottom: 0.35em;
+    line-height: 1.55;
+  }
+
+  ul ul {
+    margin-top: 0.35em;
+  }
+
+  ul li::marker {
+    color: var(--accent);
+  }
+
+  hr {
+    border: none;
+    height: 1px;
+    background: var(--hair);
+    margin: 2em 0;
+  }
+
+  /* ===== Callout blockquotes ===== */
+  blockquote {
+    margin: 1.2em 0;
+    padding: 12px 18px;
+    background: var(--callout-bg);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    color: var(--ink);
+    font-size: 10.5pt;
+    line-height: 1.55;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  blockquote p { margin: 0; color: var(--ink); }
+
+  blockquote strong { color: var(--accent-dark); }
+
+  /* ===== Section helper ===== */
+  .intro-italic {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 11.5pt;
+    text-align: center;
+    margin: 2em 0;
+  }
+
+  /* Centered subtitles on cover section */
+  h1 + h3, h1 + h2 + h3 {
+    text-align: left;
+  }
+
+  /* ===== Print niceties ===== */
+  @media print {
+    h2 { page-break-before: always; break-before: page; }
+    h3 { page-break-after: avoid; break-after: avoid; }
+    p, li { orphans: 3; widows: 3; }
+    blockquote, ul, ol { page-break-inside: avoid; break-inside: avoid; }
+    a { color: var(--accent); text-decoration: none; }
+  }
+
+  /* ===== Arabic inline spans look nice too ===== */
+  .ar {
+    font-family: "Cairo", sans-serif;
+    direction: rtl;
+    unicode-bidi: embed;
+  }
+
+  /* ===== Plan cards ===== */
+  .plans h3 {
+    margin-top: 1.2em;
+    padding: 6px 12px;
+    background: var(--accent-soft);
+    border-radius: 6px;
+    display: inline-block;
+  }
+
+  /* ===== Back cover / CTA panel ===== */
+  .cta-panel {
+    margin-top: 2em;
+    padding: 14mm 12mm;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: #fff;
+    border-radius: 10px;
+    page-break-inside: avoid;
+  }
+
+  .cta-panel h2 {
+    color: #fff;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin: 0 0 0.3em 0;
+    font-size: 20pt;
+    page-break-before: auto;
+    break-before: auto;
+  }
+
+  .cta-panel p, .cta-panel li { color: rgba(255,255,255,0.95); }
+  .cta-panel a { color: #fff; text-decoration: underline; }
+  .cta-panel strong { color: #fff; }
+
+  .closing {
+    text-align: center;
+    margin-top: 3em;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 11pt;
+    line-height: 1.8;
+  }
+
+  .closing .ar {
+    display: block;
+    margin-top: 0.4em;
+    color: var(--accent);
+    font-style: normal;
+    font-size: 12pt;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ COVER ============================================================ -->
+<section class="cover">
+  <div>
+    <div class="cover-brand">muhasebi</div>
+    <div class="cover-accent-bar"></div>
+    <h1 class="cover-title">muhasebi</h1>
+    <div class="cover-title-ar">برنامج المحاسبة السحابي للسوق المصري</div>
+    <p class="cover-subtitle">Cloud Accounting for the Egyptian Market — bilingual, ETA-ready, multi-tenant. Built for SMEs, accounting firms, and finance teams.</p>
+
+    <div class="cover-visual-note">
+      <strong>Visual suggestion</strong>
+      A clean dashboard screenshot layered over a subtle Arabic calligraphy motif in teal. On the right, a smartphone preview shows an Arabic invoice with a WhatsApp reminder bubble.
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <div>Product brochure &nbsp;·&nbsp; <strong>muhasebi.app</strong></div>
+    <div>Edition 2026</div>
+  </div>
+</section>
+
+<!-- ============================================================ THE PROBLEM ============================================================ -->
+<h2>The Problem</h2>
+
+<p>Running a business in Egypt means juggling ledgers, ETA submissions, labor law, and client chasing all at once. Most SMEs still rely on spreadsheets, paper receipts, and fragmented tools that don't talk to each other. The cost is not just time — it's missed deadlines, penalties, and cashflow surprises.</p>
+
+<p>Compliance has become non-negotiable. The Egyptian Tax Authority's (ETA) e-invoicing mandate, monthly VAT returns, quarterly withholding tax certificates, annual corporate tax filing — each one has its own portal, its own deadline, and its own risk of rejection. Payroll under Egyptian Labor Law 12/2003 adds another layer: social insurance brackets, end-of-service gratuity, overtime multipliers, annual leave entitlement. Getting any of these wrong is expensive.</p>
+
+<p>Meanwhile, business owners are losing sleep over money they've already earned. Invoices sit unpaid for 60, 90, even 120 days. Clients don't answer the phone. The accountant's monthly report arrives two weeks after it's useful. There has to be a better way — one built for Egypt, in Arabic, with the right calculations baked in from day one.</p>
+
+<!-- ============================================================ THE SOLUTION ============================================================ -->
+<h2>The Solution</h2>
+
+<p><strong>muhasebi</strong> is a cloud accounting platform built from the ground up for the Egyptian market. It combines double-entry bookkeeping, ETA e-invoicing, Egyptian payroll, multi-currency operations, client portals, and WhatsApp/SMS collections into one Arabic-first, RTL-aware workspace — with fair per-tenant pricing and role-based access that scales from a solo freelancer to a 200-employee firm. You focus on the business; muhasebi handles the plumbing.</p>
+
+<!-- ============================================================ FEATURE TOURS ============================================================ -->
+<h2>Feature Tours</h2>
+
+<h3>1. Accounting &amp; Bookkeeping</h3>
+
+<blockquote><p>🧾 <strong>The general ledger that keeps itself tidy.</strong></p></blockquote>
+
+<ul>
+  <li><strong>Hierarchical Chart of Accounts</strong> in Arabic and English, with parent/child relationships and balance rollups.</li>
+  <li><strong>Journal entries</strong> with debit/credit validation, draft/post workflow, reversal, and full audit trail.</li>
+  <li><strong>Recurring journal entries</strong> — set a monthly rent accrual or depreciation booking once, and it posts on schedule.</li>
+  <li><strong>AI-assisted account suggestions</strong> learn from your past entries to speed up data capture.</li>
+  <li><strong>Fiscal years and periods</strong> with soft close, reopen, and period locking so nothing slips past year-end.</li>
+  <li><strong>Bank reconciliation</strong> with statement import (CSV/OFX), smart auto-match, manual match, and learning categorization rules that get smarter with every reconciliation.</li>
+  <li><strong>Multi-currency</strong> with live FX rates, rate history, and automated FX revaluation postings for open balances.</li>
+  <li><strong>Opening balance import</strong> and CSV account import so migrating from your old system takes hours, not weeks.</li>
+</ul>
+
+<blockquote><p>💡 <strong>Tip:</strong> The bank reconciliation engine suggests matches with confidence scores, then learns from your corrections. By month three, most of your statement lines auto-match.</p></blockquote>
+
+<h3>2. Invoicing &amp; Cashflow</h3>
+
+<blockquote><p>💳 <strong>Get paid faster, without chasing.</strong></p></blockquote>
+
+<ul>
+  <li><strong>Beautiful Arabic/English invoices</strong> with your logo, terms, tax breakdown, and QR code for digital payment.</li>
+  <li><strong>Recurring invoices</strong> for retainers and subscriptions — set the schedule, we generate and send.</li>
+  <li><strong>Credit notes</strong> and cancellations with automatic GL reversal.</li>
+  <li><strong>Online payment collection</strong> via Paymob and Fawry, directly from the PDF or the client portal.</li>
+  <li><strong>Partial payments</strong> tracked line-by-line, with automatic write-off and escalation workflows.</li>
+  <li><strong>Collections cockpit</strong> — see every overdue invoice, log calls/emails/SMS actions, and measure collection effectiveness.</li>
+  <li><strong>Smart aging reminders</strong> that email or WhatsApp the client 3, 7, 14, and 30 days past due — all configurable, all automatic.</li>
+  <li><strong>Client portal</strong> where customers see their statements, download PDFs, and pay online 24/7.</li>
+  <li><strong>Pre-check validation</strong> catches duplicate invoice numbers, missing ETA codes, and credit-limit overruns before you save.</li>
+</ul>
+
+<blockquote><p>💡 <strong>Tip:</strong> Turn on aging reminders with WhatsApp fallback. Customers who ignore emails almost never ignore a WhatsApp message.</p></blockquote>
+
+<h3>3. Payables &amp; Expenses</h3>
+
+<blockquote><p>📥 <strong>Know what you owe, approve with confidence.</strong></p></blockquote>
+
+<ul>
+  <li><strong>Vendor master</strong> with tax IDs, payment terms, default expense accounts, and running statements.</li>
+  <li><strong>Bill capture</strong> with approval routing, partial payments, and void/cancel workflows.</li>
+  <li><strong>Vendor aging</strong> report so you never miss a due date or a prompt-payment discount.</li>
+  <li><strong>Expense categories</strong> with colors and analytics.</li>
+  <li><strong>Employee expense reports</strong> — staff submit receipts, managers approve, finance reimburses, all in-app.</li>
+  <li><strong>Bulk submit and bulk approve</strong> for high-volume weeks.</li>
+  <li><strong>Receipt attachments</strong> stored securely against every expense line.</li>
+  <li><strong>Cost center tagging</strong> on every bill and expense for departmental P&amp;L.</li>
+</ul>
+
+<h3>4. Inventory &amp; Fixed Assets</h3>
+
+<blockquote><p>📦 <strong>Stock you can count on.</strong></p></blockquote>
+
+<h4>Inventory</h4>
+<ul>
+  <li>Product catalog with SKUs, categories, units of measure, and reorder levels.</li>
+  <li>Stock movements (in/out/adjustment) with full traceability.</li>
+  <li>Low-stock alerts, turnover reports, and valuation (FIFO / LIFO / Weighted Average).</li>
+  <li>Per-product movement history and current on-hand levels.</li>
+</ul>
+
+<h4>Fixed Assets</h4>
+<ul>
+  <li>Asset register by category with useful-life, salvage rate, and depreciation method.</li>
+  <li>Automatic monthly depreciation runs with journal postings.</li>
+  <li>Depreciation schedules, asset register reports, and roll-forward schedules.</li>
+  <li>Disposal workflow with gain/loss calculation to the GL.</li>
+</ul>
+
+<h3>5. Payroll &amp; HR — Built for Egyptian Labor Law</h3>
+
+<blockquote><p>👥 <strong>Payroll that knows Law 12/2003 by heart.</strong></p></blockquote>
+
+<ul>
+  <li><strong>Employee master</strong> with Egyptian-specific fields (national ID, social insurance number, bank account).</li>
+  <li><strong>Payroll runs</strong> by month, with calculate → approve → mark-paid workflow.</li>
+  <li><strong>Salary components</strong> — fixed, variable, taxable, non-taxable, benefits-in-kind.</li>
+  <li><strong>Payslip PDFs</strong> in Arabic and English, downloadable by employee.</li>
+  <li><strong>Attendance</strong> with bulk entry, check-in/check-out, and monthly summaries.</li>
+  <li><strong>Leave management</strong> — annual, casual, sick, emergency; requests, approvals, and running balances.</li>
+  <li><strong>Employee loans</strong> and installment tracking, with automatic payroll deduction.</li>
+  <li><strong>Egyptian Labor Law engine:</strong>
+    <ul>
+      <li>Overtime calculation (regular, weekend, public holiday multipliers).</li>
+      <li>End-of-service gratuity calculation per Law 12/2003.</li>
+      <li>Leave entitlement by seniority bracket.</li>
+      <li>Minimum wage validation.</li>
+    </ul>
+  </li>
+  <li><strong>Social Insurance</strong> — monthly reports, bracket calculation, employer/employee split, registration helpers.</li>
+</ul>
+
+<blockquote><p>💡 <strong>Tip:</strong> The social insurance module auto-updates when Law 148/2019 brackets change, so you don't have to track the circulars.</p></blockquote>
+
+<h3>6. Tax &amp; Compliance</h3>
+
+<blockquote><p>🛡️ <strong>ETA-ready from day one.</strong></p></blockquote>
+
+<h4>VAT</h4>
+<ul>
+  <li>Automatic VAT calculation on invoices and bills at standard, zero, and exempt rates.</li>
+  <li>Monthly <strong>VAT return</strong> generation with PDF for tax office submission.</li>
+  <li>Full input/output VAT reconciliation.</li>
+</ul>
+
+<h4>Withholding Tax (WHT)</h4>
+<ul>
+  <li>Generate WHT certificates per vendor and per transaction.</li>
+  <li>Issue, submit, and track certificate status.</li>
+  <li>WHT summary reports for quarterly filing.</li>
+</ul>
+
+<h4>Corporate Tax</h4>
+<ul>
+  <li>Annual corporate tax calculation with manual adjustments, timing differences, and permanent differences.</li>
+  <li>File-and-pay workflow with payment recording.</li>
+</ul>
+
+<h4>ETA E-Invoicing</h4>
+<ul>
+  <li>Full Egyptian Tax Authority e-invoice integration — prepare, submit, and reconcile.</li>
+  <li>Document status tracking (submitted, accepted, rejected) with government timestamp.</li>
+  <li><strong>Item code management</strong> — search, bulk-assign, auto-suggest, and bulk-import the ETA item-code taxonomy.</li>
+  <li><strong>Unmapped line detection</strong> catches invoices that aren't ready for ETA before you send them.</li>
+  <li><strong>Compliance dashboard</strong> showing submission success rate, pending documents, and rejection reasons.</li>
+  <li>Bulk retry and bulk status-check for high-volume days.</li>
+</ul>
+
+<blockquote><p>💡 <strong>Tip:</strong> The ETA compliance dashboard flags unmapped product lines in red. Fix them once, and the auto-assign rule handles every future invoice.</p></blockquote>
+
+<h3>7. Reporting &amp; Business Intelligence</h3>
+
+<blockquote><p>📊 <strong>The numbers you need, when you need them.</strong></p></blockquote>
+
+<h4>Standard Financial Reports</h4>
+<ul>
+  <li>Trial balance, general ledger, account ledger.</li>
+  <li>Income statement, balance sheet, cash flow statement — with comparative periods.</li>
+  <li>Aging (AR and AP), client statements, vendor statements.</li>
+  <li>All reports exportable to PDF with your branding.</li>
+</ul>
+
+<h4>Tax Reports</h4>
+<ul>
+  <li>VAT return, WHT report — both screen and PDF.</li>
+  <li>Corporate tax workings.</li>
+</ul>
+
+<h4>Executive Dashboard</h4>
+<ul>
+  <li>Revenue analysis, cashflow projection, profitability by period.</li>
+  <li>KPIs for revenue growth, gross margin, days sales outstanding.</li>
+  <li>Period-over-period comparison.</li>
+</ul>
+
+<h4>Custom Reports</h4>
+<ul>
+  <li>Build your own reports with a drag-and-drop column selector, filters, grouping, and sorting. Save, run on demand, or schedule.</li>
+</ul>
+
+<h4>Scheduled Reports</h4>
+<ul>
+  <li>Email any report to stakeholders on a daily, weekly, or monthly cadence — fully hands-off.</li>
+</ul>
+
+<h4>Anomaly Detection</h4>
+<ul>
+  <li>Duplicate entries, unusual amounts, missing document sequences, weekend postings — all flagged automatically.</li>
+</ul>
+
+<h4>Exports</h4>
+<ul>
+  <li>One-click CSV export of clients, invoices, and journal entries for backup or external analysis.</li>
+</ul>
+
+<h3>8. Automation &amp; Integrations</h3>
+
+<blockquote><p>🔌 <strong>muhasebi plays well with others.</strong></p></blockquote>
+
+<ul>
+  <li><strong>E-commerce sync</strong> — connect Shopify, WooCommerce, and more. Orders auto-import and convert to invoices.</li>
+  <li><strong>Bank connections</strong> — supported-format import, balance sync, statement import.</li>
+  <li><strong>Payment gateways</strong> — Paymob and Fawry, with live webhook reconciliation.</li>
+  <li><strong>WhatsApp &amp; SMS via Beon.chat</strong> — send invoices, reminders, and two-way conversations from inside muhasebi.</li>
+  <li><strong>Webhooks</strong> — subscribe any external system to events like <code>invoice.created</code>, <code>payment.received</code>, <code>expense.approved</code>. Includes retry, signature verification, and delivery logs.</li>
+  <li><strong>CSV/XLSX imports</strong> for clients, accounts, invoices, bills, and opening balances with validation and error reports.</li>
+  <li><strong>Public OpenAPI</strong> for building your own integrations.</li>
+</ul>
+
+<h3>9. Client Portal &amp; Professional Services</h3>
+
+<blockquote><p>🤝 <strong>For accounting firms: your clients, their portal, your brand.</strong></p></blockquote>
+
+<h4>Client Portal <em>(for every muhasebi tenant)</em></h4>
+<ul>
+  <li>Clients log in to view invoices, pay online, download PDFs, and exchange secure documents.</li>
+  <li>Two-way messaging thread with read receipts.</li>
+  <li>In-portal notifications for new invoices, statements, and messages.</li>
+</ul>
+
+<h4>Engagements &amp; Working Papers <em>(for accounting firms)</em></h4>
+<ul>
+  <li>Track engagements per client with service type, start/end dates, and budget vs. actual cost.</li>
+  <li>Deliverables with due dates and completion workflow.</li>
+  <li>Working papers — upload, review, sign-off, and archive by reference number.</li>
+  <li>Time allocation analytics per engagement.</li>
+</ul>
+
+<h4>Timesheets &amp; Time-Billing</h4>
+<ul>
+  <li>Weekly timesheets with employee, client, and project tagging.</li>
+  <li>In-browser live timer for ad-hoc work.</li>
+  <li>Approval workflow (submit → approve → bill).</li>
+  <li>Generate invoices directly from approved timesheets at your billable rate.</li>
+</ul>
+
+<h3>10. Security &amp; Multi-Tenancy</h3>
+
+<blockquote><p>🔒 <strong>Built for peace of mind.</strong></p></blockquote>
+
+<ul>
+  <li><strong>Multi-tenant isolation</strong> — every tenant's data is fully segregated; one customer can never see another's ledger.</li>
+  <li><strong>Two-factor authentication (TOTP)</strong> with backup codes, enforced by policy for sensitive roles.</li>
+  <li><strong>Role-Based Access Control (RBAC)</strong> — over 40 fine-grained permissions (<code>manage_invoices</code>, <code>post_journal_entries</code>, <code>view_reports</code>, <code>manage_eta</code>, etc.) grouped into roles you can customize per tenant.</li>
+  <li><strong>Feature gating</strong> — plans are enforced by <code>feature:*</code> middleware on the backend. Upgrades take effect instantly.</li>
+  <li><strong>Activity logs</strong> — every create/update/delete captured with user, IP, and before/after values.</li>
+  <li><strong>Audit compliance dashboard</strong> — user access reports, change reports, high-risk actions, and segregation-of-duties analysis. Export for your external auditor.</li>
+  <li><strong>Alert rules</strong> — set thresholds (e.g. "notify me when any AR balance exceeds 100k EGP") and get emailed automatically.</li>
+  <li><strong>Approval workflows</strong> — define multi-step approval chains for bills, expenses, journal entries, and more.</li>
+  <li><strong>Device tokens</strong> for managing sessions across phone, laptop, and tablet.</li>
+  <li><strong>Rate limiting</strong> on sensitive endpoints (login, payments, 2FA).</li>
+</ul>
+
+<!-- ============================================================ WHY ============================================================ -->
+<h2>Why muhasebi</h2>
+
+<blockquote><p><strong><span class="ar">سبعة أسباب</span> — Seven reasons to choose muhasebi.</strong></p></blockquote>
+
+<ol>
+  <li><strong>Arabic-first, not Arabic-later.</strong> Every screen, every report, every email is native bilingual with proper RTL layout — not a translation bolted on.</li>
+  <li><strong>ETA-ready from day one.</strong> Full e-invoicing integration, item-code management, and compliance dashboard — no plugins, no third-party middleware.</li>
+  <li><strong>Built for Egypt.</strong> Law 12/2003 payroll, Law 148/2019 social insurance, EGP-first multi-currency, Egyptian fiscal-year conventions, Paymob and Fawry payments, Beon.chat WhatsApp.</li>
+  <li><strong>Multi-tenant for accounting firms.</strong> One login, many client ledgers — with full isolation, engagement tracking, and working papers.</li>
+  <li><strong>Mobile-friendly.</strong> Responsive web UI and device-token-based authentication means your accountant can approve a bill from their phone on the way to a client.</li>
+  <li><strong>Fair pricing in EGP.</strong> No dollar pricing, no surprise overages — transparent per-tenant plans.</li>
+  <li><strong>Your data, your audit trail.</strong> Every change logged, exportable, and inspectable. You're always ready for an auditor or an ETA review.</li>
+</ol>
+
+<!-- ============================================================ PLANS ============================================================ -->
+<h2>Plans Overview</h2>
+
+<p>muhasebi is offered in four tiers. Exact pricing is available on our pricing page — all plans are billed in EGP with monthly, quarterly, and annual options.</p>
+
+<div class="plans">
+
+<h3>Starter</h3>
+<p><em>For freelancers and micro-businesses.</em></p>
+<ul>
+  <li>Core accounting, invoicing, basic reporting, client portal for up to a handful of clients.</li>
+  <li>VAT support.</li>
+</ul>
+
+<h3>Growth</h3>
+<p><em>For small and mid-sized businesses.</em></p>
+<ul>
+  <li>Everything in Starter, plus payroll, inventory, fixed assets, bank reconciliation, collections, e-commerce sync, expense reports, WhatsApp/SMS messaging.</li>
+  <li>Full ETA e-invoicing.</li>
+</ul>
+
+<h3>Pro</h3>
+<p><em>For mid-market and accounting firms.</em></p>
+<ul>
+  <li>Everything in Growth, plus engagements, working papers, timesheets, custom reports, scheduled reports, approval workflows, alert rules, audit compliance dashboard, webhook endpoints, anomaly detection.</li>
+</ul>
+
+<h3>Enterprise</h3>
+<p><em>For large organizations.</em></p>
+<ul>
+  <li>Everything in Pro, plus dedicated onboarding, priority support, SLA, and custom integration assistance.</li>
+</ul>
+
+</div>
+
+<blockquote><p>💡 <strong>Tip:</strong> Features are enabled via backend <code>feature:*</code> gating. When you upgrade, the new modules light up in your menu immediately — no redeployment, no data migration.</p></blockquote>
+
+<!-- ============================================================ GETTING STARTED ============================================================ -->
+<h2>Getting Started</h2>
+
+<p>Three steps. About twenty minutes to a working ledger.</p>
+
+<h3>1. Sign Up</h3>
+<p>Create your tenant at <strong>muhasebi.app</strong> with your company name, email, and phone. We send a confirmation and provision your workspace in seconds.</p>
+
+<h3>2. Onboarding Wizard</h3>
+<p>Our guided wizard walks you through:</p>
+<ul>
+  <li>Choosing a <strong>Chart of Accounts template</strong> (general SME, retail, services, manufacturing) — or uploading your own.</li>
+  <li>Setting up your <strong>fiscal year</strong>.</li>
+  <li>Importing <strong>opening balances</strong> from a CSV or your old system.</li>
+  <li>Optionally loading <strong>sample data</strong> to explore the product first.</li>
+</ul>
+
+<h3>3. Invite Your Team</h3>
+<p>Add accountants, salespeople, and managers. Assign them pre-built roles (Owner, Accountant, Manager, Sales, Read-Only) or build your own. Enable 2FA for anyone touching money.</p>
+
+<p>That's it. Create your first invoice, send it, watch it get paid.</p>
+
+<!-- ============================================================ CTA / CONTACT ============================================================ -->
+<h2>Contact</h2>
+
+<div class="cta-panel">
+  <h2>Ready to stop fighting your spreadsheets?</h2>
+  <ul>
+    <li><strong>Web:</strong> muhasebi.app</li>
+    <li><strong>Email:</strong> hello@muhasebi.app</li>
+    <li><strong>Phone / WhatsApp:</strong> [your number here]</li>
+    <li><strong>Address:</strong> [your Cairo office here]</li>
+  </ul>
+  <p>Book a 30-minute guided demo and we'll migrate your chart of accounts and opening balances for free.</p>
+</div>
+
+<div class="closing">
+  muhasebi — because your business deserves an accountant that never sleeps.
+  <span class="ar">محاسبي — لأن عملك يستحق محاسبًا لا ينام.</span>
+</div>
+
+</body>
+</html>

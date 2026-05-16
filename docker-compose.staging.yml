@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      target: production
+    environment:
+      - APP_ENV=staging
+      - APP_DEBUG=true
+
+  nginx:
+    ports:
+      - "8080:80"

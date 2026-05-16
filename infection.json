@@ -1,0 +1,28 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "app/Support"
+        ]
+    },
+    "timeout": 30,
+    "testFramework": "phpunit",
+    "testFrameworkOptions": "--filter=MoneyTest",
+    "logs": {
+        "text": "storage/logs/infection.log",
+        "html": "storage/logs/infection.html",
+        "summary": "storage/logs/infection-summary.log"
+    },
+    "mutators": {
+        "@default": true
+    },
+    "minMsi": 90,
+    "minCoveredMsi": 90,
+    "_prerequisite_notes": [
+        "Requires a PHP coverage driver: pcov (preferred for speed), xdebug, or phpdbg.",
+        "Install on Debian/Ubuntu: sudo apt-get install php-pcov",
+        "Run: ./vendor/bin/infection --threads=2 --only-covering-test-cases",
+        "Scope is intentionally narrow — app/Support/Money.php only — to demonstrate the pipeline.",
+        "Widen `source.directories` once the pipeline is green."
+    ]
+}
