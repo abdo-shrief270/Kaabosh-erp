@@ -429,9 +429,15 @@ Route::prefix('v1')->group(function (): void {
 
 
             // ── RBAC (roles + permissions) ──
+            // role-presets is read-only metadata that feeds the team-
+            // management "Apply preset" UI, so it's gated by manage_team
+            // (every team admin needs it). The mutating RBAC-admin
+            // endpoints stay behind the stricter manage_roles gate.
+            Route::middleware('permission:manage_team')->group(function (): void {
+                Route::get('rbac/role-presets', [RbacController::class, 'rolePresets'])->name('rbac.role-presets');
+            });
             Route::middleware('permission:manage_roles')->group(function (): void {
                 Route::get('rbac/roles', [RbacController::class, 'roles'])->name('rbac.roles');
-                Route::get('rbac/role-presets', [RbacController::class, 'rolePresets'])->name('rbac.role-presets');
                 Route::get('rbac/permissions', [RbacController::class, 'permissions'])->name('rbac.permissions');
                 Route::put('rbac/users/{user}/roles', [RbacController::class, 'assignRoles'])->whereNumber('user')->name('rbac.assign-roles');
             });
