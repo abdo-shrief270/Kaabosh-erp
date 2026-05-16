@@ -177,13 +177,13 @@ describe('CouponResource page', function (): void {
 
     it('loads the index for SuperAdmin', function (): void {
         $this->actingAs($this->superAdmin);
-        $this->get('/admin/coupons')->assertOk();
+        $this->get('/coupons')->assertOk();
     });
 
     it('denies non-SuperAdmin access', function (): void {
         $tenant = createTenant();
         $this->actingAs(createAdminUser($tenant));
 
-        $this->get('/admin/coupons')->assertForbidden();
+        $this->get('/coupons')->assertForbidden();
     });
 });

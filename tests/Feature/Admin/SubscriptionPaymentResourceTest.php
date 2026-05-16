@@ -18,14 +18,14 @@ describe('SubscriptionPaymentResource', function (): void {
     it('loads the index page for SuperAdmin', function (): void {
         $this->actingAs($this->superAdmin);
 
-        $this->get('/admin/subscription-payments')->assertOk();
+        $this->get('/subscription-payments')->assertOk();
     });
 
     it('denies non-SuperAdmin access', function (): void {
         $tenant = createTenant();
         $this->actingAs(createAdminUser($tenant));
 
-        $this->get('/admin/subscription-payments')->assertForbidden();
+        $this->get('/subscription-payments')->assertForbidden();
     });
 
     it('defines a Dunning tab pointing at the Failed status', function (): void {
